@@ -1,0 +1,13 @@
+{
+  "name": "smartrealtime",
+  "description": "RealTime Service",
+  "keywords": [
+    "go",
+    "realtome",
+    "example"
+  ],
+  "image": "heroku/go:1.6",
+  "mount_dir": "src/github.com/Zombispormedio/smartrealtime",
+  "website": "https://github.com/Zombispormedio/smartrealtime",
+  "repository": "https://github.com/Zombispormedio/smartrealtime"
+}
