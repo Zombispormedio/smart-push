@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/Zombispormedio/smartdb/routes"
+	"github.com/Zombispormedio/smartrealtime/routes"
 )
 
 func main() {
