@@ -1,1 +1,1 @@
-web: smartdb
+web: go-getting-started

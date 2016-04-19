@@ -1,13 +1,14 @@
 {
-  "name": "smartdb",
-  "description": "DB Service",
+  "name": "go-getting-started",
+  "description": "Go Getting Started Example App",
   "keywords": [
+    "getting-started",
     "go",
-    "mongodb",
+    "sample",
     "example"
   ],
   "image": "heroku/go:1.6",
-  "mount_dir": "src/github.com/Zombispormedio/smartdb",
-  "website": "https://github.com/Zombispormedio/smartdb",
-  "repository": "https://github.com/Zombispormedio/smartdb"
+  "mount_dir": "src/github.com/heroku/go-getting-started",
+  "website": "http://github.com/heroku/go-getting-started",
+  "repository": "http://github.com/heroku/go-getting-started"
 }
