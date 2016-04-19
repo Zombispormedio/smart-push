@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 	"github.com/labstack/echo/middleware"
@@ -27,6 +28,9 @@ func main() {
 		for {
 			websocket.Message.Send(ws, "Hello, Client!")
 			msg := ""
+			log.WithFields(log.Fields{
+				"animal": "walrus",
+			}).Info("A walrus appears")
 			websocket.Message.Receive(ws, &msg)
 			println(msg)
 		}
