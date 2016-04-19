@@ -1,10 +1,13 @@
 package router
 
-import(
-    "github.com/labstack/echo"
+import (
+	"github.com/labstack/echo"
 )
 
+func Use(echo *echo.Echo) {
 
-func Use(echo *echo.Echo){
-    
+	ConfigRouter := echo.Group("/config")
+
+	SetConfigRoutes(ConfigRouter)
+
 }
