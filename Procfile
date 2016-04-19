@@ -1,1 +1,1 @@
-web: smartrealtime
+web: smartpush
