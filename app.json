@@ -1,13 +1,13 @@
 {
-  "name": "smartpush",
-  "description": "RealTime Service",
+  "name": "smartdb",
+  "description": "DB Service",
   "keywords": [
     "go",
-    "realtome",
+    "mongodb",
     "example"
   ],
   "image": "heroku/go:1.6",
-  "mount_dir": "src/github.com/Zombispormedio/smartrealtime",
-  "website": "https://github.com/Zombispormedio/smartrealtime",
-  "repository": "https://github.com/Zombispormedio/smartrealtime"
+  "mount_dir": "src/github.com/Zombispormedio/smartdb",
+  "website": "https://github.com/Zombispormedio/smartdb",
+  "repository": "https://github.com/Zombispormedio/smartdb"
 }

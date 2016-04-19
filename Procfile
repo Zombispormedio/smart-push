@@ -1,1 +1,1 @@
-web: smartpush
+web: smartdb
