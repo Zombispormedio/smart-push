@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/Zombispormedio/smartrealtime",
+	"ImportPath": "github.com/Zombispormedio/smart-push",
 	"GoVersion": "go1.6",
 	"Deps": []
 }
