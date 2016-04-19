@@ -25,7 +25,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.GET("/ws", standard.WrapHandler(websocket.Handler(func(ws *websocket.Conn) {
-		for {
+		//for {
 			websocket.Message.Send(ws, "Hello, Client!")
 			msg := ""
 			log.WithFields(log.Fields{
@@ -33,7 +33,7 @@ func main() {
 			}).Info("A walrus appears")
 			websocket.Message.Receive(ws, &msg)
 			println(msg)
-		}
+		//}
 	})))
 
 	e.GET("/", func(c echo.Context) error {
