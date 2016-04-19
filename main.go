@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -25,21 +26,33 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.GET("/ws", standard.WrapHandler(websocket.Handler(func(ws *websocket.Conn) {
-		//for {
+		for {
 			websocket.Message.Send(ws, "Hello, Client!")
 			msg := ""
 			log.WithFields(log.Fields{
 				"animal": "walrus",
 			}).Info("A walrus appears")
-			websocket.Message.Receive(ws, &msg)
-			println(msg)
-		//}
+			
+			err:=websocket.Message.Receive(ws, &msg)
+			
+			if err!= nil{
+				fmt.Println(err)
+				break
+			}
+			
+			fmt.Println(msg)
+			
+
+		}
 	})))
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!\n")
 	})
 
+	log.WithFields(log.Fields{
+		"port": port,
+	}).Info("Connected")
 	e.Run(standard.New(":" + port))
 
 }

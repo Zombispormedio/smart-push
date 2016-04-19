@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -31,8 +32,17 @@ func main() {
 			log.WithFields(log.Fields{
 				"animal": "walrus",
 			}).Info("A walrus appears")
-			websocket.Message.Receive(ws, &msg)
-			println(msg)
+			
+			err:=websocket.Message.Receive(ws, &msg)
+			
+			if err!= nil{
+				fmt.Println(err)
+				break
+			}
+			
+			fmt.Println(msg)
+			
+
 		}
 	})))
 
@@ -40,6 +50,9 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!\n")
 	})
 
+	log.WithFields(log.Fields{
+		"port": port,
+	}).Info("Connected")
 	e.Run(standard.New(":" + port))
 
 }
