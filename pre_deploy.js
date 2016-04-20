@@ -9,7 +9,7 @@ const PROD_MAIN="cmd/smart-push/main.go";
 const GODEP="Godeps/Godeps.json";
 const INTERNAL="github.com/Zombispormedio/smart-push/";
 const PACKAGES=[
-    "config", "router", "controllers", "lib/response", "middleware", "lib/request"
+    "config", "router", "controllers", "lib/response", "middleware", "lib/request", "lib/store"
 ];
 
 fs.writeFileSync(PROD_MAIN, fs.readFileSync(DEV_MAIN));

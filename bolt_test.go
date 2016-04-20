@@ -8,7 +8,7 @@ import (
 
 func TestMain(m *testing.T){
     
-     db, err := bolt.Open(".cache/main.db", 0600, nil)
+     db, err := bolt.Open(".store/main.db", 0600, nil)
     if err != nil {
        m.Fatal(err);
     }
@@ -21,7 +21,7 @@ func TestMain(m *testing.T){
         v := string(b.Get([]byte("identifier")))
         m.Log(v)
         
-        if v!=""{
+        if v==""{
              m.Log("identifier changed")
             Error=b.Put([]byte("identifier"), []byte("n6NH976vNOHlWQwGH83uvXS9bTsrUtYb"))
         }

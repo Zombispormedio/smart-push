@@ -8,7 +8,7 @@ import (
 
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
-    "github.com/Zombispormedio/smart-push/lib/cache"
+    "github.com/Zombispormedio/smart-push/lib/store"
 )
 
 
