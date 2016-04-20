@@ -1,10 +1,10 @@
-package cache
+package store
 
 import "github.com/boltdb/bolt"
 
 func OpenDB() (*bolt.DB, error) {
 
-	db, err := bolt.Open(".cache/main.db", 0600, nil)
+	db, err := bolt.Open(".store/main.db", 0600, nil)
 	return db, err
 
 }

@@ -1,8 +1,7 @@
 package controllers
 
 import (
-	
-"fmt"
+
 	
 	"os"
 
@@ -21,7 +20,6 @@ func RefreshCredentials() error {
 	url := hostname + "push/config/credentials"
 
 	makeReqWithAuthorization:=func(auth string){
-        fmt.Println(auth)
         headers:=map[string]string{
             "Authorization":auth,
         }
@@ -33,7 +31,7 @@ func RefreshCredentials() error {
        
     }
     
-    Error=cache.Get("identifier", "Config", makeReqWithAuthorization)
+    Error=store.Get("identifier", "Config", makeReqWithAuthorization)
     
 	return Error
 }
