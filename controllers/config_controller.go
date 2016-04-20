@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Zombispormedio/smart-push/request"
-	"github.com/Zombispormedio/smart-push/response"
+	"github.com/Zombispormedio/smart-push/lib/request"
+	"github.com/Zombispormedio/smart-push/lib/response"
 )
+
+
+
+
 
 func RefreshCredentials() error {
 	var Error error

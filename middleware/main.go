@@ -3,7 +3,7 @@ package middleware
 import ( 
     "os"
     "github.com/labstack/echo"
-"github.com/Zombispormedio/smart-push/response"
+"github.com/Zombispormedio/smart-push/lib/response"
 )
 
 func Task(next echo.HandlerFunc) echo.HandlerFunc {

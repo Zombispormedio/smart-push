@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/Zombispormedio/smart-push/controllers"
-	"github.com/Zombispormedio/smart-push/response"
+	"github.com/Zombispormedio/smart-push/lib/response"
     "github.com/Zombispormedio/smart-push/middleware"
 	"github.com/labstack/echo"
 )

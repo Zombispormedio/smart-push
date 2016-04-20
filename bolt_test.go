@@ -15,10 +15,18 @@ func TestMain(m *testing.T){
     defer db.Close()
     
     db.Update(func(tx *bolt.Tx) error{
+        var Error error
          b, _ :=tx.CreateBucketIfNotExists([]byte("Config"))
       
+        v := string(b.Get([]byte("identifier")))
+        m.Log(v)
+        
+        if v==""{
+             m.Log("identifier changed")
+            Error=b.Put([]byte("identifier"), []byte("n6NH976vNOHlWQwGH83uvXS9bTsrUtYb"))
+        }
          
-        return b.Put([]byte("identifier"), []byte("n6NH976vNOHlWQwGH83uvXS9bTsrUtYb"))
+        return Error
     })
     
   m.Log("hello")
