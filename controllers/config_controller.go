@@ -1,11 +1,27 @@
 package controllers
-import(
-    "errors"
+
+import (
+	"errors"
+
+	"fmt"
+	"os"
+
+	"github.com/Zombispormedio/smart-push/request"
+	"github.com/Zombispormedio/smart-push/response"
 )
 
+func RefreshCredentials() error {
+	var Error error
+	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
+	url := hostname + "push/config/credentials"
 
-func RefreshCredentials() error{
-    var err error
-    err=errors.New("Error")
-    return err
+	body := response.MessageT{}
+
+	request.GET(url, &body)
+
+	fmt.Println(body.Message)
+
+	Error = errors.New("hello")
+
+	return Error
 }
