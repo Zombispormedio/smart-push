@@ -2,11 +2,15 @@ package router
 
 import (
 	"github.com/labstack/echo"
+	"github.com/Zombispormedio/smart-push/response"
 )
 
-func Use(echo *echo.Echo) {
-
-	ConfigRouter := echo.Group("/config")
+func Use(e *echo.Echo) {
+	
+	e.GET("/", func(c echo.Context) error {
+		return response.Success(c, "Works Perfectly")
+	})
+	ConfigRouter := e.Group("/config")
 
 	SetConfigRoutes(ConfigRouter)
 
