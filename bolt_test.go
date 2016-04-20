@@ -1,4 +1,4 @@
-package verbose
+package main
 import (
     "testing"
     "github.com/boltdb/bolt"
