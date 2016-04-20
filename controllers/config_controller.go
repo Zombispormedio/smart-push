@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"errors"
-
-	"fmt"
+	
+"fmt"
+	
 	"os"
 
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
+    "github.com/Zombispormedio/smart-push/lib/cache"
 )
 
 
@@ -19,13 +20,20 @@ func RefreshCredentials() error {
 	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
 	url := hostname + "push/config/credentials"
 
-	body := response.MessageT{}
-
-	request.GET(url, &body)
-
-	fmt.Println(body.Message)
-
-	Error = errors.New("hello")
-
+	makeReqWithAuthorization:=func(auth string){
+        fmt.Println(auth)
+        headers:=map[string]string{
+            "Authorization":auth,
+        }
+        
+        msg:=response.MessageT{}
+        
+        request.GETWithHeader(url, headers, msg )
+        
+       
+    }
+    
+    Error=cache.Get("identifier", "Config", makeReqWithAuthorization)
+    
 	return Error
 }
