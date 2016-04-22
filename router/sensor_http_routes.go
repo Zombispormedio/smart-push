@@ -12,7 +12,7 @@ func SensorGridHTTPRoutes(router *echo.Group) {
 	router.POST("", func(c echo.Context) error {
         var Error error    
 		
-		ControllerError:=controllers.ManageSensorData(c.Get("body"))
+		ControllerError:=controllers.ManageSensorData(c.Get("ClientID").(string),c.Get("body"))
 		
 		if 	ControllerError == nil {
 			Error= response.Success(c, "Sync Perfectly")

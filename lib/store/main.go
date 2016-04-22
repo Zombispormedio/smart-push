@@ -49,6 +49,31 @@ func Put(key string, value string, bucket string) error {
 			
 			if err == nil {
 				err = b.Put([]byte(key), []byte(value))
+			
+			}
+			return err
+		})
+
+
+	}
+
+	return Error
+}
+
+
+func PutWithoutDB(db *bolt.DB, key string, value string, bucket string) error {
+
+	var Error error
+	
+	
+	if Error == nil {
+
+		Error = db.Update(func(tx *bolt.Tx) error {
+			b, err := tx.CreateBucketIfNotExists([]byte(bucket))
+			
+			if err == nil {
+				err = b.Put([]byte(key), []byte(value))
+			
 			}
 			return err
 		})

@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	
 	"os"
+
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/labstack/echo"
@@ -51,6 +53,8 @@ func SensorGrid(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			if resBody.Status == 0 {
+				c.Set("ClientID", ClientID)
+				
 				Error = next(c)
 			} else {
 				return response.Forbidden(c, "No Authorization")
@@ -68,22 +72,21 @@ func Body(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var Error error
 
-		var u interface{}
+		 var u interface{}
 
-		if err := c.Bind(u); err != nil {
-			return response.Forbidden(c, "No body")
+		if err := c.Bind(&u); err != nil {
+			return response.Forbidden(c, err.Error())
 		}
-		
-		if u!=nil{
-			
+
+		if u != nil {
+
 			c.Set("body", u)
-			
-			Error=next(c)
-			
-		}else{
+
+			Error = next(c)
+
+		} else {
 			Error = response.Forbidden(c, "No body")
 		}
-		
 
 		return Error
 	}
