@@ -3,7 +3,7 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/Zombispormedio/smartdb/lib/store"
+	"github.com/Zombispormedio/smart-push/lib/store"
 	"github.com/parnurzeal/gorequest"
 )
 
