@@ -14,6 +14,10 @@ func Use(e *echo.Echo) {
 	
 	ConfigRouter := e.Group("/config")
 	
-	SetConfigRoutes(ConfigRouter)
+	ConfigRoutes(ConfigRouter)
+	
+	SensorGridRouter:=e.Group("/sensor_grid")
+	
+	SensorGridHTTPRoutes(SensorGridRouter)
 
 }

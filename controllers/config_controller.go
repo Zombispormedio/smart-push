@@ -13,23 +13,11 @@ func RefreshCredentials() error {
 	var Error error
 	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
 	url := hostname + "push/config/credentials"
-	var identifier string
-
-	GetKeyError := store.Get("identifier", "Config", func(value string) {
-		identifier = value
-	})
-
-	if GetKeyError != nil {
-		return GetKeyError
-	}
-
-	headers := map[string]string{
-		"Authorization": identifier,
-	}
+	
 
 	msg := response.DataT{}
 
-	RequestError := request.GETWithHeader(url, headers, &msg)
+	RequestError := request.GetWithAuthorization(url, &msg)
 
 	if RequestError != nil {
 		return RequestError

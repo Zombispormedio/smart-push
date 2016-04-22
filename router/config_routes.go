@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-func SetConfigRoutes(router *echo.Group) {
+func ConfigRoutes(router *echo.Group) {
     
     router.Use(middleware.Task)
     
