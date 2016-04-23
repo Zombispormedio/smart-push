@@ -2,7 +2,9 @@ package request
 
 import (
 	"encoding/json"
+	"os"
 
+	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
 	"github.com/parnurzeal/gorequest"
 )
@@ -66,4 +68,23 @@ func PostWithAuthorization(url string, reqBody interface{}, result interface{}) 
 		End()
 
 	return json.Unmarshal([]byte(resBody), result)
+}
+
+func CheckSensorGrid(req response.ReqSensorT) (bool, error) {
+	accepted := false
+	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
+	url := hostname + "push/config/sensor_grid"
+	resBody := &response.MixedMessageT{}
+	RequestError := PostWithAuthorization(url, req, resBody)
+
+	if RequestError != nil {
+		return accepted, RequestError
+	}
+
+	if resBody.Status == 0 {
+		accepted = true
+	}
+
+	return accepted, RequestError
+
 }

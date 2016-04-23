@@ -36,23 +36,20 @@ func SensorGrid(next echo.HandlerFunc) echo.HandlerFunc {
 		ClientSecret := c.Request().Header().Get("ClientSecret")
 
 		if ClientID != "" && ClientSecret != "" {
-			hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
-			url := hostname + "push/config/sensor_grid"
+			
 
 			reqBody := response.ReqSensorT{}
 
 			reqBody.ClientID = ClientID
 			reqBody.ClientSecret = ClientSecret
 
-			resBody := &response.MixedMessageT{}
-
-			RequestError := request.PostWithAuthorization(url, reqBody, resBody)
+			RequestAccepted, RequestError:=request.CheckSensorGrid(reqBody)
 
 			if RequestError != nil {
 				return response.Forbidden(c, "No Authorization")
 			}
 
-			if resBody.Status == 0 {
+			if RequestAccepted {
 				c.Set("ClientID", ClientID)
 				
 				Error = next(c)

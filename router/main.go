@@ -19,5 +19,7 @@ func Use(e *echo.Echo) {
 	SensorGridRouter:=e.Group("/sensor_grid")
 	
 	SensorGridHTTPRoutes(SensorGridRouter)
+	
+	SensorGridWebSocketRoutes(SensorGridRouter)
 
 }
