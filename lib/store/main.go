@@ -1,7 +1,6 @@
 package store
 
 import (
-
 	"github.com/boltdb/bolt"
 )
 
@@ -37,49 +36,68 @@ func Get(key string, bucket string, cb func(string)) error {
 func Put(key string, value string, bucket string) error {
 
 	var Error error
-	
+
 	db, Error := OpenDB()
-	
+
 	if Error == nil {
 
 		defer db.Close()
 
 		Error = db.Update(func(tx *bolt.Tx) error {
 			b, err := tx.CreateBucketIfNotExists([]byte(bucket))
-			
+
 			if err == nil {
 				err = b.Put([]byte(key), []byte(value))
-			
+
 			}
 			return err
 		})
-
 
 	}
 
 	return Error
 }
 
-
-func PutWithoutDB(db *bolt.DB, key string, value string, bucket string) error {
+func PutWithDB(db *bolt.DB, key string, value string, bucket string) error {
 
 	var Error error
-	
-	
-	if Error == nil {
 
-		Error = db.Update(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(bucket))
-			
-			if err == nil {
-				err = b.Put([]byte(key), []byte(value))
-			
-			}
-			return err
-		})
+	Error = db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucket))
 
+		if err == nil {
+			err = b.Put([]byte(key), []byte(value))
 
-	}
+		}
+		return err
+	})
+
+	return Error
+}
+
+func GetWithDB(db *bolt.DB,  bucket string , key string) (string, error) {
+
+	var Error error
+	var Result string
+
+	Error = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+
+		Result = string(b.Get([]byte(key)))
+		return nil
+	})
+
+	return Result, Error
+}
+
+func Iterate(db *bolt.DB, bucketName string, cb func(*bolt.Cursor) error) error {
+	var Error error
+
+	Error = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		c := b.Cursor()
+		return cb(c)
+	})
 
 	return Error
 }

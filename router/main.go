@@ -12,7 +12,7 @@ func Use(e *echo.Echo) {
 	})
 	
 	
-	ConfigRouter := e.Group("/config")
+	ConfigRouter := e.Group("/task")
 	
 	ConfigRoutes(ConfigRouter)
 	

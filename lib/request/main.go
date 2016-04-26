@@ -45,7 +45,7 @@ func GetWithAuthorization(url string, body interface{}) error {
 	headers := map[string]string{
 		"Authorization": identifier,
 	}
-
+	
 	return GETWithHeader(url, headers, body)
 
 }
@@ -70,10 +70,26 @@ func PostWithAuthorization(url string, reqBody interface{}, result interface{}) 
 	return json.Unmarshal([]byte(resBody), result)
 }
 
+
+func PostWithHeaders(url string, reqBody interface{}, headers map[string]string, result interface{}) error {
+
+	request := gorequest.New()
+	post := request.Post(url)
+
+	for k, v := range headers {
+		post = post.Set(k, v)
+	}
+	post=post.Send(reqBody)
+
+	_, resBody, _ := post.End()
+
+	return json.Unmarshal([]byte(resBody), result)
+}
+
 func CheckSensorGrid(req response.ReqSensorT) (bool, error) {
 	accepted := false
 	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
-	url := hostname + "push/config/sensor_grid"
+	url := hostname + "push/sensor_grid/check"
 	resBody := &response.MixedMessageT{}
 	RequestError := PostWithAuthorization(url, req, resBody)
 

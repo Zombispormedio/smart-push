@@ -24,6 +24,22 @@ func ConfigRoutes(router *echo.Group) {
         
         return Error
 
+	});
+	
+	
+	router.GET("/pushover", func(c echo.Context) error {
+        var Error error    
+        
+		ControllerError := controllers.PushOver()
+
+		if 	ControllerError == nil {
+			Error= response.Success(c, "Push Over Completed")
+		} else {
+			Error= response.ExpectFail(c,  ControllerError.Error())
+		}
+        
+        return Error
+
 	})
 
 }

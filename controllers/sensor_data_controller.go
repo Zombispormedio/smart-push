@@ -43,7 +43,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 
 		gridNodes[i] = sensor.NodeID
 
-		NodeStoringError := store.PutWithoutDB(db, sensor.NodeID, sensor.Value, "Sensors")
+		NodeStoringError := store.PutWithDB(db, sensor.NodeID, sensor.Value, "Sensors")
 
 		if NodeStoringError != nil {
 			return NodeStoringError
@@ -52,7 +52,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 
 	gridNodesStr := strings.Join(gridNodes, ",")
 
-	GridStoringError := store.PutWithoutDB(db, sensorGridID, gridNodesStr, "Grids")
+	GridStoringError := store.PutWithDB(db, sensorGridID, gridNodesStr, "Grids")
    
 	db.Close();
 	return GridStoringError
