@@ -101,3 +101,18 @@ func Iterate(db *bolt.DB, bucketName string, cb func(*bolt.Cursor) error) error 
 
 	return Error
 }
+
+func DeleteWithDB(db *bolt.DB, key []byte,bucket string) error {
+
+	var Error error
+
+	Error = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))		
+		return b.Delete(key)
+	})
+
+	return Error
+}
+
+
+

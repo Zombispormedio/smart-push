@@ -41,5 +41,20 @@ func ConfigRoutes(router *echo.Group) {
         return Error
 
 	})
+	
+	router.GET("/clean", func(c echo.Context) error {
+        var Error error    
+        
+		ControllerError := controllers.Clean()
+
+		if 	ControllerError == nil {
+			Error= response.Success(c, "Clean Completed")
+		} else {
+			Error= response.ExpectFail(c,  ControllerError.Error())
+		}
+        
+        return Error
+
+	})
 
 }

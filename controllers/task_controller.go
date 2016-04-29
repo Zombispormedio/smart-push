@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
@@ -140,6 +141,64 @@ func SendSensorGridPacket(db *bolt.DB, packet []SensorGrid) error {
 	if resBody.Status != 0 {
 		Error = errors.New(resBody.Error)
 	}
+
+	return Error
+}
+
+func Clean() error {
+	var Error error
+
+	db, OpenDBError := store.OpenDB()
+
+	if OpenDBError != nil {
+		return OpenDBError
+	}
+	
+
+	SensorsDeleteError := store.Iterate(db, "Sensors", func(c *bolt.Cursor) error {
+		var err error
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+
+			SensorError := store.DeleteWithDB(db, k, "Sensors")
+			if SensorError != nil {
+				err = SensorError
+
+				log.WithFields(log.Fields{
+					"message":SensorError,
+				}).Error("DeleteSensorError")
+				break
+			}
+
+		}
+		return err
+	})
+
+	if SensorsDeleteError != nil {
+		return SensorsDeleteError
+	}
+
+	GridsDeleteError := store.Iterate(db, "Grids", func(c *bolt.Cursor) error {
+		var err error
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+
+			GridError :=store.DeleteWithDB(db, k, "Grids")
+			if GridError != nil {
+				err = GridError
+				log.WithFields(log.Fields{
+					"message":GridError,
+				}).Error("DeleteGridError")
+				break
+			}
+
+		}
+		return err
+	})
+
+	if GridsDeleteError != nil {
+		Error = SensorsDeleteError
+	}
+	
+	 db.Close();
 
 	return Error
 }
