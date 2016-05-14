@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"os"
 	"reflect"
 	"time"
 	"github.com/Zombispormedio/smart-push/lib/redis"
@@ -34,7 +35,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 
 	client := redis.Client()
 
-	gridKey := "grid:" + sensorGridID
+	gridKey := os.Getenv("GRID_KEY")+":" + sensorGridID
 	
 	DelError:=client.Del(gridKey)
 	
@@ -51,7 +52,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 			return SADDError
 		}
 		
-		nodeKey:="sensor:"+sensor.NodeID
+		nodeKey:=os.Getenv("SENSOR_KEY")+":"+sensor.NodeID
 		
 		nodeMap:=map[string]string{
 			"value":sensor.Value,

@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"errors"
+	"strings"
 
 	"os"
-	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
+	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
@@ -42,89 +43,109 @@ func RefreshCredentials() error {
 	return Error
 }
 
-type PushSensorData struct{
+type PushSensorData struct {
 	NodeID string `json:"node_id"`
 	Value  string `json:"value"`
-	Date 	string `json:"date"`
+	Date   string `json:"date"`
 }
 
-type SensorGrid struct {
-	ClientID string       `json:"client_id"`
-	Data     []SensorData `json:"data"`
+type PushSensorGrid struct {
+	ClientID string           `json:"client_id"`
+	Data     []PushSensorData `json:"data"`
 }
 
 func PushOver() error {
 	var Error error
 	freq := config.PacketFrequency()
 
+	Send := func(packet []PushSensorGrid) error {
+		return SendSensorGridPacket(packet)
+	}
+	grids := []PushSensorGrid{}
+
+	client := redis.Client()
+	
+	defer client.Close()
+
+	gridKeys, Error := client.KeysGroup(os.Getenv("GRID_KEY"))
+	
+	log.Info(gridKeys)
+
+	if Error != nil {
+		return Error
+	}
+
+	for _, gridkey := range gridKeys {
+
+		if len(grids) == freq {
+			SendError := Send(grids)
+			if SendError != nil {
+				Error = SendError
+				break
+			} else {
+				grids = nil
+			}
+		}
+
+		sensorKeys, SensorKeysError := client.SMembers(gridkey)
+
+		if SensorKeysError != nil {
+			Error = SensorKeysError
+			break
+		}
+
+		elems := strings.Split(gridkey, ":")
+		clientID := elems[len(elems)-1]
+
+		grid := PushSensorGrid{}
+		grid.ClientID = clientID
+
+		for _, nodeID := range sensorKeys {
+			sensorData := PushSensorData{}
+
+			sensorData.NodeID = nodeID
+
+			sensorKey := os.Getenv("SENSOR_KEY") + ":" + nodeID
+
+			dataMap, SensorDataError := client.HGetAllMap(sensorKey)
+
+			sensorData.Value = dataMap["value"]
+			sensorData.Date = dataMap["date"]
+
+			if SensorDataError != nil {
+				Error = SensorDataError
+				break
+			}
+
+			grid.Data = append(grid.Data, sensorData)
+
+		}
+
+		if Error != nil {
+			break
+		}
+
+		grids = append(grids, grid)
+
+	}
+	
+
+	
+	if Error == nil && len(grids) > 0 {
+		Error = Send(grids)
+	}
+
+	return Error
+}
+
+func SendSensorGridPacket(packet []PushSensorGrid) error {
+	var Error error
+
 	db, OpenDBError := store.OpenDB()
 
 	if OpenDBError != nil {
 		return OpenDBError
 	}
-
-	Send := func(packet []SensorGrid) error {
-		return SendSensorGridPacket(db, packet)
-	}
-	grids := []SensorGrid{}
-
-	Error = store.Iterate(db, "Grids", func(c *bolt.Cursor) error {
-		var err error
-
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-
-			if len(grids) == freq {
-				err = Send(grids)
-				if err != nil {
-					break
-				} else {
-					grids = nil
-				}
-			}
-
-			grid := SensorGrid{}
-			grid.ClientID = string(k)
-
-			sensorIDs := strings.Split(string(v), ",")
-
-			for _, nodeID := range sensorIDs {
-				sensorData := SensorData{}
-
-				sensorData.NodeID = nodeID
-				var DBGettingError error
-				sensorData.Value, DBGettingError = store.GetWithDB(db, "Sensors", nodeID)
-
-				if DBGettingError != nil {
-					err = DBGettingError
-					break
-				}
-
-				grid.Data = append(grid.Data, sensorData)
-
-			}
-
-			if err != nil {
-				break
-			}
-
-			grids = append(grids, grid)
-
-		}
-
-		if err == nil && len(grids) > 0 {
-			err = Send(grids)
-		}
-
-		return err
-	})
-
-	db.Close()
-
-	return Error
-}
-
-func SendSensorGridPacket(db *bolt.DB, packet []SensorGrid) error {
-	var Error error
 
 	identifier, GetKeyError := store.GetWithDB(db, "Config", "identifier")
 
@@ -148,6 +169,8 @@ func SendSensorGridPacket(db *bolt.DB, packet []SensorGrid) error {
 		Error = errors.New(resBody.Error)
 	}
 
+	db.Close()
+
 	return Error
 }
 
@@ -159,7 +182,6 @@ func Clean() error {
 	if OpenDBError != nil {
 		return OpenDBError
 	}
-	
 
 	SensorsDeleteError := store.Iterate(db, "Sensors", func(c *bolt.Cursor) error {
 		var err error
@@ -170,7 +192,7 @@ func Clean() error {
 				err = SensorError
 
 				log.WithFields(log.Fields{
-					"message":SensorError,
+					"message": SensorError,
 				}).Error("DeleteSensorError")
 				break
 			}
@@ -187,11 +209,11 @@ func Clean() error {
 		var err error
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
 
-			GridError :=store.DeleteWithDB(db, k, "Grids")
+			GridError := store.DeleteWithDB(db, k, "Grids")
 			if GridError != nil {
 				err = GridError
 				log.WithFields(log.Fields{
-					"message":GridError,
+					"message": GridError,
 				}).Error("DeleteGridError")
 				break
 			}
@@ -203,8 +225,8 @@ func Clean() error {
 	if GridsDeleteError != nil {
 		Error = SensorsDeleteError
 	}
-	
-	 db.Close();
+
+	db.Close()
 
 	return Error
 }
