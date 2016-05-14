@@ -1,6 +1,7 @@
 package redis
 import (
     "os"
+    "time"
     "gopkg.in/redis.v3"
 )
 
@@ -28,3 +29,48 @@ func (r *RedisWrapper)Get(key string) (string, error){
 }
 
 
+func (r *RedisWrapper)Incr(key string)(int64, error){
+    return r.Client.Incr(key).Result()
+}
+
+func (r *RedisWrapper)KeysGroup(group string)([]string, error){
+    return r.Client.Keys("*"+group+"*").Result()
+}
+
+
+
+
+func (r *RedisWrapper) Set(key string, value string) error{
+    return r.Client.Set(key, value, -1).Err()
+}
+
+func (r *RedisWrapper) SetWithExpiration(key string, value string, expire time.Duration ) error{
+    return r.Client.Set(key, value, expire).Err()
+}
+
+func (r *RedisWrapper)Del(key string)  error{
+    return r.Client.Del(key).Err()
+}
+
+func (r *RedisWrapper)SAdd(key string, members string)  error{
+    return r.Client.SAdd(key, members).Err()
+}
+
+func (r *RedisWrapper)SMembers(key string)  ([]string,error){
+    return r.Client.SMembers(key).Result()
+}
+
+
+func (r *RedisWrapper)HMSetMap(key string, fields map[string]string)  error{
+    return r.Client.HMSetMap(key, fields).Err()
+}
+
+
+func (r *RedisWrapper)HGetAllMap(key string) (map[string]string, error){
+    return r.Client.HGetAllMap(key).Result()
+}
+
+
+func (r *RedisWrapper)Close() error{
+    return r.Client.Close()
+}

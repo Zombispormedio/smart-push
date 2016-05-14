@@ -42,6 +42,12 @@ func RefreshCredentials() error {
 	return Error
 }
 
+type PushSensorData struct{
+	NodeID string `json:"node_id"`
+	Value  string `json:"value"`
+	Date 	string `json:"date"`
+}
+
 type SensorGrid struct {
 	ClientID string       `json:"client_id"`
 	Data     []SensorData `json:"data"`

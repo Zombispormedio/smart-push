@@ -1,13 +1,10 @@
 package controllers
 
 import (
-	
 	"reflect"
-	"strings"
-
-	"github.com/Zombispormedio/smart-push/lib/store"
+	"time"
+	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smartdb/lib/struts"
-
 )
 
 type SensorData struct {
@@ -28,32 +25,46 @@ func (sensorGridData *SensorGridData) FillByMap(Map map[string]interface{}, Lite
 }
 
 func ManageSensorData(sensorGridID string, data interface{}) error {
-
+	var Error error
 	grid := SensorGridData{}
 
 	grid.FillByMap(data.(map[string]interface{}), "json")
 
 	numNodes := len(grid.Data)
-	gridNodes := make([]string, numNodes)
-	db, _:=store.OpenDB();
+
+	client := redis.Client()
+
+	gridKey := "grid:" + sensorGridID
 	
+	DelError:=client.Del(gridKey)
 	
+	if DelError != nil{
+		return DelError
+	}
+
 	for i := 0; i < numNodes; i++ {
 		sensor := grid.Data[i]
 
-		gridNodes[i] = sensor.NodeID
-
-		NodeStoringError := store.PutWithDB(db, sensor.NodeID, sensor.Value, "Sensors")
-
-		if NodeStoringError != nil {
-			return NodeStoringError
+		SADDError:=client.SAdd(gridKey, sensor.NodeID)
+		
+		if SADDError != nil{
+			return SADDError
+		}
+		
+		nodeKey:="sensor:"+sensor.NodeID
+		
+		nodeMap:=map[string]string{
+			"value":sensor.Value,
+			"date":time.Now().String(),
+		}
+		HMSetMapError:=client.HMSetMap(nodeKey, nodeMap)
+		
+		if HMSetMapError != nil{
+			return HMSetMapError
 		}
 	}
 
-	gridNodesStr := strings.Join(gridNodes, ",")
+	Error = client.Close()
 
-	GridStoringError := store.PutWithDB(db, sensorGridID, gridNodesStr, "Grids")
-   
-	db.Close();
-	return GridStoringError
+	return Error
 }
