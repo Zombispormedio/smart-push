@@ -6,13 +6,11 @@ import (
 
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
-	"github.com/boltdb/bolt"
 )
 
 func RefreshCredentials() error {
@@ -64,12 +62,10 @@ func PushOver() error {
 	grids := []PushSensorGrid{}
 
 	client := redis.Client()
-	
+
 	defer client.Close()
 
 	gridKeys, Error := client.KeysGroup(os.Getenv("GRID_KEY"))
-	
-	log.Info(gridKeys)
 
 	if Error != nil {
 		return Error
@@ -128,9 +124,7 @@ func PushOver() error {
 		grids = append(grids, grid)
 
 	}
-	
 
-	
 	if Error == nil && len(grids) > 0 {
 		Error = Send(grids)
 	}
@@ -177,56 +171,39 @@ func SendSensorGridPacket(packet []PushSensorGrid) error {
 func Clean() error {
 	var Error error
 
-	db, OpenDBError := store.OpenDB()
+	client := redis.Client()
 
-	if OpenDBError != nil {
-		return OpenDBError
+	defer client.Close()
+
+	sensorKeys, SensorKeysError := client.KeysGroup(os.Getenv("Sensor_KEY"))
+
+	if SensorKeysError != nil {
+		return SensorKeysError
 	}
 
-	SensorsDeleteError := store.Iterate(db, "Sensors", func(c *bolt.Cursor) error {
-		var err error
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+	gridKeys, GridKeysError := client.KeysGroup(os.Getenv("GRID_KEY"))
 
-			SensorError := store.DeleteWithDB(db, k, "Sensors")
-			if SensorError != nil {
-				err = SensorError
+	if GridKeysError != nil {
+		return GridKeysError
+	}
 
-				log.WithFields(log.Fields{
-					"message": SensorError,
-				}).Error("DeleteSensorError")
-				break
-			}
+	for _, k := range sensorKeys {
+		SensorCleanError := client.Del(k)
 
+		if SensorCleanError != nil {
+			Error = SensorCleanError
+			break
 		}
-		return err
-	})
-
-	if SensorsDeleteError != nil {
-		return SensorsDeleteError
 	}
 
-	GridsDeleteError := store.Iterate(db, "Grids", func(c *bolt.Cursor) error {
-		var err error
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+	for _, k := range gridKeys {
+		gridCleanError := client.Del(k)
 
-			GridError := store.DeleteWithDB(db, k, "Grids")
-			if GridError != nil {
-				err = GridError
-				log.WithFields(log.Fields{
-					"message": GridError,
-				}).Error("DeleteGridError")
-				break
-			}
-
+		if gridCleanError != nil {
+			Error = gridCleanError
+			break
 		}
-		return err
-	})
-
-	if GridsDeleteError != nil {
-		Error = SensorsDeleteError
 	}
-
-	db.Close()
 
 	return Error
 }

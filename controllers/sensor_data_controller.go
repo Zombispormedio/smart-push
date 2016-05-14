@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"time"
+	"strconv"
 	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smartdb/lib/struts"
 )
@@ -56,7 +57,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 		
 		nodeMap:=map[string]string{
 			"value":sensor.Value,
-			"date":time.Now().String(),
+			"date":strconv.FormatInt(time.Now().Unix(), 10),
 		}
 		HMSetMapError:=client.HMSetMap(nodeKey, nodeMap)
 		
