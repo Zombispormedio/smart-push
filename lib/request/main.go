@@ -104,3 +104,22 @@ func CheckSensorGrid(req response.ReqSensorT) (bool, error) {
 	return accepted, RequestError
 
 }
+
+
+func DBStatus() (bool, error){
+	accepted := false
+	hostname := os.Getenv("SENSOR_STORE_HOSTNAME")
+	url := hostname + "status"
+	resBody := &response.DataT{}
+	RequestError := GetWithAuthorization(url,resBody)
+
+	if RequestError != nil {
+		return accepted, RequestError
+	}
+
+	if resBody.Status == 0 {
+		accepted = true
+	}
+
+	return accepted, RequestError
+}

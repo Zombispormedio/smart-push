@@ -6,7 +6,7 @@ import (
 
 
 
-func TestMain(m *testing.T){
+func TestBolt(m *testing.T){
     
      db, err := bolt.Open(".store/main.db", 0600, nil)
     if err != nil {

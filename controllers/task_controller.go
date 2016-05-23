@@ -7,7 +7,9 @@ import (
 	"os"
 
 	"github.com/Zombispormedio/smart-push/config"
+	"github.com/Zombispormedio/smart-push/lib/rabbit"
 	"github.com/Zombispormedio/smart-push/lib/redis"
+	//"github.com/Zombispormedio/smart-push/lib/rabbit"
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
@@ -50,6 +52,31 @@ type PushSensorData struct {
 type PushSensorGrid struct {
 	ClientID string           `json:"client_id"`
 	Data     []PushSensorData `json:"data"`
+}
+
+func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSensorGrid) error {
+	var Error error
+	for _, nodeID := range sensorKeys {
+		sensorData := PushSensorData{}
+
+		sensorData.NodeID = nodeID
+
+		sensorKey := os.Getenv("SENSOR_KEY") + ":" + nodeID
+
+		dataMap, SensorDataError := client.HGetAllMap(sensorKey)
+
+		sensorData.Value = dataMap["value"]
+		sensorData.Date = dataMap["date"]
+
+		if SensorDataError != nil {
+			Error = SensorDataError
+			break
+		}
+
+		grid.Data = append(grid.Data, sensorData)
+
+	}
+	return Error
 }
 
 func PushOver() error {
@@ -96,26 +123,7 @@ func PushOver() error {
 		grid := PushSensorGrid{}
 		grid.ClientID = clientID
 
-		for _, nodeID := range sensorKeys {
-			sensorData := PushSensorData{}
-
-			sensorData.NodeID = nodeID
-
-			sensorKey := os.Getenv("SENSOR_KEY") + ":" + nodeID
-
-			dataMap, SensorDataError := client.HGetAllMap(sensorKey)
-
-			sensorData.Value = dataMap["value"]
-			sensorData.Date = dataMap["date"]
-
-			if SensorDataError != nil {
-				Error = SensorDataError
-				break
-			}
-
-			grid.Data = append(grid.Data, sensorData)
-
-		}
+		Error = GetSensorData(client, sensorKeys, &grid)
 
 		if Error != nil {
 			break
@@ -208,11 +216,73 @@ func Clean() error {
 	return Error
 }
 
-
-
-
-func PushRabbit() error{
+func PushRabbit() error {
 	var Error error
-	
+
+	awake, DBStatusError := request.DBStatus()
+
+	if DBStatusError != nil {
+		return DBStatusError
+	}
+
+	if !awake {
+		return errors.New("No awake DB")
+	}
+
+	client := redis.Client()
+	rClient, RError := rabbit.New(os.Getenv("EX_RABBIT"), "direct", true)
+
+	if RError != nil {
+		return RError
+	}
+
+	defer client.Close()
+	defer rClient.Close()
+
+	var rKey string
+
+	GetKeyError := store.Get("identifier", "Config", func(value string) {
+		rKey = value
+	})
+
+	if GetKeyError != nil {
+		return GetKeyError
+	}
+
+	gridKeys, Error := client.KeysGroup(os.Getenv("GRID_KEY"))
+
+	if Error != nil {
+		return Error
+	}
+
+	for _, gridkey := range gridKeys {
+
+		sensorKeys, SensorKeysError := client.SMembers(gridkey)
+
+		if SensorKeysError != nil {
+			Error = SensorKeysError
+			break
+		}
+
+		elems := strings.Split(gridkey, ":")
+		clientID := elems[len(elems)-1]
+
+		grid := PushSensorGrid{}
+		grid.ClientID = clientID
+
+		SensorDataError := GetSensorData(client, sensorKeys, &grid)
+
+		if SensorDataError != nil {
+			Error = SensorDataError
+			break
+		}
+
+		Error = rClient.PublishJSON(rKey, &grid)
+
+		if Error != nil {
+			break
+		}
+	}
+
 	return Error
 }
