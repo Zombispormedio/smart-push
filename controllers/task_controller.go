@@ -231,7 +231,7 @@ func PushRabbit() error {
 	}
 
 	client := redis.Client()
-	rClient, RError := rabbit.New(os.Getenv("EX_RABBIT"), "direct", true)
+	rClient, RError := rabbit.New(os.Getenv("EX_RABBIT"), "topic", true)
 
 	if RError != nil {
 		return RError
@@ -243,7 +243,7 @@ func PushRabbit() error {
 	var rKey string
 
 	GetKeyError := store.Get("identifier", "Config", func(value string) {
-		rKey = value
+		rKey = value+".push"
 	})
 
 	if GetKeyError != nil {
