@@ -61,7 +61,7 @@ func (rabbit *Rabbit) Exchange(exname string, extype string, durable bool) error
 	Error = rabbit.Chan.ExchangeDeclare(
 		rabbit.ExName, // name
 		rabbit.ExType, // type
-		durable,          // durable
+		durable,       // durable
 		false,         // auto-deleted
 		false,         // internal
 		false,         // no-wait
@@ -79,7 +79,7 @@ func (rabbit *Rabbit) Close() {
 
 func (rabbit *Rabbit) PublishJSON(key string, body interface{}) error {
 	dat, _ := json.Marshal(body)
-	Error:= rabbit.Chan.Publish(
+	Error := rabbit.Chan.Publish(
 		rabbit.ExName, // exchange
 		key,           // routing key
 		false,         // mandatory
@@ -88,6 +88,6 @@ func (rabbit *Rabbit) PublishJSON(key string, body interface{}) error {
 			ContentType: "application/json",
 			Body:        dat,
 		})
-		
-		return Error
+
+	return Error
 }

@@ -6,10 +6,11 @@ import (
 
 	"os"
 
+
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/rabbit"
 	"github.com/Zombispormedio/smart-push/lib/redis"
-	//"github.com/Zombispormedio/smart-push/lib/rabbit"
+
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
@@ -271,14 +272,15 @@ func PushRabbit() error {
 		grid.ClientID = clientID
 
 		SensorDataError := GetSensorData(client, sensorKeys, &grid)
-
+		
 		if SensorDataError != nil {
 			Error = SensorDataError
 			break
 		}
+		
 
 		Error = rClient.PublishJSON(rKey, &grid)
-
+	
 		if Error != nil {
 			break
 		}

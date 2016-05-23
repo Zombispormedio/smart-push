@@ -66,6 +66,8 @@ func PostWithAuthorization(url string, reqBody interface{}, result interface{}) 
 		Set("Authorization", identifier).
 		Send(reqBody).
 		End()
+		
+		
 
 	return json.Unmarshal([]byte(resBody), result)
 }
@@ -113,6 +115,7 @@ func DBStatus() (bool, error){
 	resBody := &response.DataT{}
 	RequestError := GetWithAuthorization(url,resBody)
 
+	
 	if RequestError != nil {
 		return accepted, RequestError
 	}
