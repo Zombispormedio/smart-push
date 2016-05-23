@@ -23,6 +23,14 @@ func Client() *RedisWrapper{
     return r
 }
 
+func Status() error{
+    r:=Client();
+    Error:=r.Client.Ping().Err()
+    r.Close()
+    
+    return Error
+}
+
 
 func (r *RedisWrapper)Get(key string) (string, error){
     return r.Client.Get(key).Result()

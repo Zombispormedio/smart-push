@@ -207,3 +207,12 @@ func Clean() error {
 
 	return Error
 }
+
+
+
+
+func PushRabbit() error{
+	var Error error
+	
+	return Error
+}

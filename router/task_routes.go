@@ -56,5 +56,22 @@ func ConfigRoutes(router *echo.Group) {
         return Error
 
 	})
+	
+	
+	router.GET("/push_rabbit", func(c echo.Context) error {
+        var Error error    
+        
+		ControllerError := controllers.PushRabbit()
+
+		if 	ControllerError == nil {
+			Error= response.Success(c, "Push Over Completed")
+		} else {
+			Error= response.ExpectFail(c,  ControllerError.Error())
+		}
+        
+        return Error
+
+	})
+	
 
 }

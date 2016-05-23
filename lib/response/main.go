@@ -61,3 +61,12 @@ func Forbidden(e echo.Context, message string) error {
 
 	return e.JSON(http.StatusForbidden, msg)
 }
+
+
+func Data(e echo.Context,  data  interface{}) error{
+    var msg DataT
+
+    msg.Data=data
+   
+    return e.JSON(http.StatusOK, msg)
+}
