@@ -1,24 +1,30 @@
 package router
 
 import (
-    "fmt"
-    "encoding/json"
+	"encoding/json"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/Zombispormedio/smart-push/controllers"
 )
 
-func Mosquito(data []byte) error{
-    var Error error
-    
-    result:=map[string]interface{}{}
-    
-     JSONError:=json.Unmarshal(data, &result)
-    
-    if JSONError !=nil{
-        return JSONError
-    }
-    
-    
-    fmt.Println(result)
-    
-    
-    return Error
+func Mosquito(data []byte) error {
+	var Error error
+
+	result := map[string]interface{}{}
+
+	JSONError := json.Unmarshal(data, &result)
+
+	if JSONError != nil {
+		return JSONError
+	}
+
+	sensorGrid := result["sensor_grid"].(string)
+
+	log.WithFields(log.Fields{
+		"client_id": sensorGrid,
+        "by":"MQTT",
+	}).Info("Sensor Data Published")
+	Error = controllers.ManageSensorData(sensorGrid, result)
+
+	return Error
 }
