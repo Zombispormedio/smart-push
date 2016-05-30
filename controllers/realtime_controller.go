@@ -3,6 +3,7 @@ package controllers
 import (
 	"os"
 "time"
+"strconv"
 	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	
@@ -26,7 +27,7 @@ func GetRealtimeData(sensor *response.RealTimeData) error {
 		var date=dataMap["date"]
 		unixDate, _ := strconv.ParseInt(date, 10, 64)
 		sensor.Value = dataMap["value"]
-		sensor.TimeStamp = time.Unix(unixDate, 0)
+		sensor.TimeStamp = time.Unix(unixDate, 0).String()
 	}
 
 	return Error
