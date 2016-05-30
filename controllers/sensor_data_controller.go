@@ -57,7 +57,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 		
 		nodeMap:=map[string]string{
 			"value":sensor.Value,
-			"date":strconv.FormatInt(time.Now().Unix(), 10),
+			"date":strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
 		}
 		HMSetMapError:=client.HMSetMap(nodeKey, nodeMap)
 		
