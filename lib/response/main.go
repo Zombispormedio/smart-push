@@ -33,6 +33,12 @@ type DataT struct {
 	Data   interface{} `json:"data"`
 }
 
+type RealTimeData struct {
+	ID        string `json:"node_id"`
+	Value     string `json:"value"`
+	TimeStamp string `json:"timestamp"`
+}
+
 func Success(e echo.Context, message string) error {
 	msg := MessageT{
 		Status:  0,
@@ -64,9 +70,11 @@ func Forbidden(e echo.Context, message string) error {
 
 
 func Data(e echo.Context,  data  interface{}) error{
-    var msg DataT
+    msg:=DataT{
+		Status:0,
+		Data:data,
+	}
 
-    msg.Data=data
    
     return e.JSON(http.StatusOK, msg)
 }

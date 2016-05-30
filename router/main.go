@@ -1,9 +1,9 @@
 package router
 
 import (
+	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/labstack/echo"
-		"github.com/Zombispormedio/smart-push/lib/redis"
 )
 
 func Use(e *echo.Echo) {
@@ -14,7 +14,7 @@ func Use(e *echo.Echo) {
 
 	e.GET("/status", func(c echo.Context) error {
 
-		RedisError:=redis.Status()
+		RedisError := redis.Status()
 
 		status := struct {
 			Redis bool `json:"redis_status"`
@@ -34,5 +34,11 @@ func Use(e *echo.Echo) {
 	SensorGridHTTPRoutes(SensorGridRouter)
 
 	SensorGridWebSocketRoutes(SensorGridRouter)
+
+	RealtimeRouter := e.Group("/realtime")
+
+	RealtimeRoutes(RealtimeRouter)
+
+
 
 }

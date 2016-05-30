@@ -6,7 +6,6 @@ import (
 
 	"os"
 
-
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/rabbit"
 	"github.com/Zombispormedio/smart-push/lib/redis"
@@ -66,13 +65,13 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 
 		dataMap, SensorDataError := client.HGetAllMap(sensorKey)
 
-		sensorData.Value = dataMap["value"]
-		sensorData.Date = dataMap["date"]
-
 		if SensorDataError != nil {
 			Error = SensorDataError
 			break
 		}
+
+		sensorData.Value = dataMap["value"]
+		sensorData.Date = dataMap["date"]
 
 		grid.Data = append(grid.Data, sensorData)
 
@@ -243,7 +242,7 @@ func PushRabbit() error {
 	var rKey string
 
 	GetKeyError := store.Get("identifier", "Config", func(value string) {
-		rKey = value+".push"
+		rKey = value + ".push"
 	})
 
 	if GetKeyError != nil {
@@ -272,15 +271,14 @@ func PushRabbit() error {
 		grid.ClientID = clientID
 
 		SensorDataError := GetSensorData(client, sensorKeys, &grid)
-		
+
 		if SensorDataError != nil {
 			Error = SensorDataError
 			break
 		}
-		
 
 		Error = rClient.PublishJSON(rKey, &grid)
-	
+
 		if Error != nil {
 			break
 		}
