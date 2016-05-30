@@ -18,9 +18,16 @@ type MixedMessageT struct {
     Error  string `json:"error"`
 }
 
+
 type MessageT struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
+}
+
+type Message2T struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Type string `json:"type"`
 }
 
 type ErrorMessageT struct {

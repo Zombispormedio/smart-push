@@ -53,11 +53,12 @@ func Login(Receive func(interface{}) error) (error, string) {
 
 }
 
-func SendSuccessMessage(ws *websocket.Conn, message string ) error{
+func SendSuccessMessage(ws *websocket.Conn, message string, typeForm string) error{
 	
-	msg:=response.MessageT{
+	msg:=response.Message2T{
 		Status:0,
 		Message:message,
+		Type:typeForm,
 	}
 	
 	msgjson, _:=json.Marshal(msg)
@@ -78,7 +79,7 @@ func SensorGridWebSocketRoutes(router *echo.Group) {
 		LoginError, SensorGridID := Login(Receive)
 
 		if LoginError == nil {
-			SendSuccessMessage(ws, "Login Successfully")
+			SendSuccessMessage(ws, "Login Successfully", "login")
 			for {
 
 				var data map[string]interface{}
@@ -101,7 +102,7 @@ func SensorGridWebSocketRoutes(router *echo.Group) {
 					break
 				}
 				
-				SendSuccessMessage(ws, "Data Successfully")
+				SendSuccessMessage(ws, "Data Successfully", "data")
 			}
 
 		}
