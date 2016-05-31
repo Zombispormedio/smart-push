@@ -5,6 +5,8 @@ import (
 		"github.com/Zombispormedio/smart-push/lib/mosquito"
 	"github.com/Zombispormedio/smart-push/router"
 	"github.com/labstack/echo"
+	"os"
+	  "os/signal"
 
 )
 
@@ -19,13 +21,18 @@ func main() {
 	subscriber:=mosquito.New(router.Mosquito)
 	
 	
-	forever:=make(chan bool)
+	sigc := make(chan os.Signal, 1)
+
+    signal.Notify(sigc, os.Interrupt, os.Kill)
 	
 	go config.Listen(server)
 	
 	
-	go subscriber.Run(forever)
+	go subscriber.Run()
 	
 
-	<-forever
+	  <-sigc
+	   if err := subscriber.Client.Disconnect(); err != nil {
+        panic(err)
+    }
 }
