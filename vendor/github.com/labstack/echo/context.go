@@ -65,22 +65,37 @@ type (
 		// for `engine.URL#QueryParam()`.
 		QueryParam(string) string
 
-		// QueryParams returns the query parameters as map. It is an alias for `engine.URL#QueryParams()`.
+		// QueryParams returns the query parameters as map.
+		// It is an alias for `engine.URL#QueryParams()`.
 		QueryParams() map[string][]string
 
 		// FormValue returns the form field value for the provided name. It is an
 		// alias for `engine.Request#FormValue()`.
 		FormValue(string) string
 
-		// FormParams returns the form parameters as map. It is an alias for `engine.Request#FormParams()`.
+		// FormParams returns the form parameters as map.
+		// It is an alias for `engine.Request#FormParams()`.
 		FormParams() map[string][]string
 
 		// FormFile returns the multipart form file for the provided name. It is an
 		// alias for `engine.Request#FormFile()`.
 		FormFile(string) (*multipart.FileHeader, error)
 
-		// MultipartForm returns the multipart form. It is an alias for `engine.Request#MultipartForm()`.
+		// MultipartForm returns the multipart form.
+		// It is an alias for `engine.Request#MultipartForm()`.
 		MultipartForm() (*multipart.Form, error)
+
+		// Cookie returns the named cookie provided in the request.
+		// It is an alias for `engine.Request#Cookie()`.
+		Cookie(string) (engine.Cookie, error)
+
+		// SetCookie adds a `Set-Cookie` header in HTTP response.
+		// It is an alias for `engine.Response#SetCookie()`.
+		SetCookie(engine.Cookie)
+
+		// Cookies returns the HTTP cookies sent with the request.
+		// It is an alias for `engine.Request#Cookies()`.
+		Cookies() []engine.Cookie
 
 		// Get retrieves data from the context.
 		Get(string) interface{}
@@ -88,8 +103,11 @@ type (
 		// Set saves data in the context.
 		Set(string, interface{})
 
-		// Del data from the context
+		// Del deletes data from the context.
 		Del(string)
+
+		// Contains checks if the key exists in the context.
+		Contains(string) bool
 
 		// Bind binds the request body into provided type `i`. The default binder
 		// does it based on Content-Type header.
@@ -155,7 +173,8 @@ type (
 		ServeContent(io.ReadSeeker, string, time.Time) error
 
 		// Reset resets the context after request completes. It must be called along
-		// with `Echo#GetContext()` and `Echo#PutContext()`. See `Echo#ServeHTTP()`
+		// with `Echo#AcquireContext()` and `Echo#ReleaseContext()`.
+		// See `Echo#ServeHTTP()`
 		Reset(engine.Request, engine.Response)
 	}
 
@@ -277,6 +296,18 @@ func (c *context) MultipartForm() (*multipart.Form, error) {
 	return c.request.MultipartForm()
 }
 
+func (c *context) Cookie(name string) (engine.Cookie, error) {
+	return c.request.Cookie(name)
+}
+
+func (c *context) SetCookie(cookie engine.Cookie) {
+	c.response.SetCookie(cookie)
+}
+
+func (c *context) Cookies() []engine.Cookie {
+	return c.request.Cookies()
+}
+
 func (c *context) Set(key string, val interface{}) {
 	if c.store == nil {
 		c.store = make(store)
@@ -290,6 +321,11 @@ func (c *context) Get(key string) interface{} {
 
 func (c *context) Del(key string) {
 	delete(c.store, key)
+}
+
+func (c *context) Contains(key string) bool {
+	_, ok := c.store[key]
+	return ok
 }
 
 func (c *context) Bind(i interface{}) error {
@@ -444,19 +480,19 @@ func (c *context) Logger() *log.Logger {
 }
 
 func (c *context) ServeContent(content io.ReadSeeker, name string, modtime time.Time) error {
-	rq := c.Request()
-	rs := c.Response()
+	req := c.Request()
+	res := c.Response()
 
-	if t, err := time.Parse(http.TimeFormat, rq.Header().Get(HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
-		rs.Header().Del(HeaderContentType)
-		rs.Header().Del(HeaderContentLength)
+	if t, err := time.Parse(http.TimeFormat, req.Header().Get(HeaderIfModifiedSince)); err == nil && modtime.Before(t.Add(1*time.Second)) {
+		res.Header().Del(HeaderContentType)
+		res.Header().Del(HeaderContentLength)
 		return c.NoContent(http.StatusNotModified)
 	}
 
-	rs.Header().Set(HeaderContentType, ContentTypeByExtension(name))
-	rs.Header().Set(HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
-	rs.WriteHeader(http.StatusOK)
-	_, err := io.Copy(rs, content)
+	res.Header().Set(HeaderContentType, ContentTypeByExtension(name))
+	res.Header().Set(HeaderLastModified, modtime.UTC().Format(http.TimeFormat))
+	res.WriteHeader(http.StatusOK)
+	_, err := io.Copy(res, content)
 	return err
 }
 
@@ -470,10 +506,10 @@ func ContentTypeByExtension(name string) (t string) {
 	return
 }
 
-func (c *context) Reset(rq engine.Request, rs engine.Response) {
+func (c *context) Reset(req engine.Request, res engine.Response) {
 	c.netContext = nil
-	c.request = rq
-	c.response = rs
+	c.request = req
+	c.response = res
 	c.store = nil
 	c.handler = notFoundHandler
 }
