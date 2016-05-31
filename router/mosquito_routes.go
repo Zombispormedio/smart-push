@@ -17,6 +17,7 @@ func Mosquito(data []byte) error {
 	if JSONError != nil {
 		return JSONError
 	}
+	log.Info(result)
 	if result["sensor_grid"] == nil{
 		return errors.New("No sensor_grid client_id")
 	}
