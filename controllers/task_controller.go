@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"errors"
-	"strings"
-
 	"os"
-
+	"strconv"
+	"strings"
+	"time"
+	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/rabbit"
 	"github.com/Zombispormedio/smart-push/lib/redis"
@@ -13,6 +14,7 @@ import (
 	"github.com/Zombispormedio/smart-push/lib/request"
 	"github.com/Zombispormedio/smart-push/lib/response"
 	"github.com/Zombispormedio/smart-push/lib/store"
+	"github.com/Zombispormedio/smart-push/lib/utils"
 )
 
 func RefreshCredentials() error {
@@ -61,21 +63,54 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 
 		sensorData.NodeID = nodeID
 
-		sensorKey := os.Getenv("SENSOR_KEY") + ":" + nodeID
+		sensorGroup := os.Getenv("SENSOR_KEY") + ":" + nodeID
 
-		dataMap, SensorDataError := client.HGetAllMap(sensorKey)
+		keys, GroupError := client.KeysGroup(sensorGroup)
 
-		if SensorDataError != nil {
-			Error = SensorDataError
+		if GroupError != nil {
+			Error = GroupError
+			log.WithFields(log.Fields{
+				"group": sensorGroup,
+				"error": GroupError.Error(),
+			}).Error("SensorGroupError")
+
 			break
 		}
 
-		sensorData.Value = dataMap["value"]
-		sensorData.Date = dataMap["date"]
+		max := utils.GetMaxTimestampKey(keys)
+
+		value, GetError := client.Get(max.Key)
+
+		if GetError != nil {
+			Error = GetError
+			log.WithFields(log.Fields{
+				"group": max.Key,
+				"error": GetError.Error(),
+			}).Error("SensorGetError")
+			break
+		}
+
+		sensorData.Value = value
+		sensorData.Date = strconv.FormatInt(max.Timestamp, 10)
 
 		grid.Data = append(grid.Data, sensorData)
+		if len(keys) > 1 {
+			index := max.Index
+			KeysToRemove := append(keys[:index], keys[index+1:]...)
+			n:=time.Now()
+			Error = client.Expire(time.Second, KeysToRemove...)
+			log.Info(time.Since(n))
+			if Error != nil {
+				log.WithFields(log.Fields{
+					"error": Error.Error(),
+				}).Error("SensorDelError")
+				break
+			}
+
+		}
 
 	}
+
 	return Error
 }
 
@@ -92,10 +127,13 @@ func PushOver() error {
 
 	defer client.Close()
 
-	gridKeys, Error := client.KeysGroup(os.Getenv("GRID_KEY"))
+	gridKeys, GroupError := client.KeysGroup(os.Getenv("GRID_KEY"))
 
-	if Error != nil {
-		return Error
+	if GroupError != nil {
+		log.WithFields(log.Fields{
+			"error": GroupError.Error(),
+		}).Error("GridGroupError")
+		return GroupError
 	}
 
 	for _, gridkey := range gridKeys {
@@ -104,21 +142,29 @@ func PushOver() error {
 			SendError := Send(grids)
 			if SendError != nil {
 				Error = SendError
+				log.WithFields(log.Fields{
+					"error": Error.Error(),
+				}).Error("SendError")
 				break
 			} else {
 				grids = nil
 			}
 		}
 
-		sensorKeys, SensorKeysError := client.SMembers(gridkey)
+		sensorStr, SensorKeysError := client.Get(gridkey)
 
 		if SensorKeysError != nil {
 			Error = SensorKeysError
+			log.WithFields(log.Fields{
+					"error": Error.Error(),
+				}).Error("SensorKeysError")
 			break
 		}
 
+		sensorKeys := strings.Split(sensorStr, ",")
+
 		elems := strings.Split(gridkey, ":")
-		clientID := elems[len(elems)-1]
+		clientID := elems[1]
 
 		grid := PushSensorGrid{}
 		grid.ClientID = clientID
@@ -189,28 +235,24 @@ func Clean() error {
 		return SensorKeysError
 	}
 
+	SensorCleanError := client.Del(sensorKeys...)
+
+	if SensorCleanError != nil {
+		return SensorCleanError
+
+	}
+
 	gridKeys, GridKeysError := client.KeysGroup(os.Getenv("GRID_KEY"))
 
 	if GridKeysError != nil {
 		return GridKeysError
 	}
 
-	for _, k := range sensorKeys {
-		SensorCleanError := client.Del(k)
+	gridCleanError := client.Del(gridKeys...)
 
-		if SensorCleanError != nil {
-			Error = SensorCleanError
-			break
-		}
-	}
+	if gridCleanError != nil {
+		Error = gridCleanError
 
-	for _, k := range gridKeys {
-		gridCleanError := client.Del(k)
-
-		if gridCleanError != nil {
-			Error = gridCleanError
-			break
-		}
 	}
 
 	return Error
@@ -257,15 +299,17 @@ func PushRabbit() error {
 
 	for _, gridkey := range gridKeys {
 
-		sensorKeys, SensorKeysError := client.SMembers(gridkey)
+		sensorStr, SensorKeysError := client.Get(gridkey)
 
 		if SensorKeysError != nil {
 			Error = SensorKeysError
 			break
 		}
 
+		sensorKeys := strings.Split(sensorStr, ",")
+
 		elems := strings.Split(gridkey, ":")
-		clientID := elems[len(elems)-1]
+		clientID := elems[1]
 
 		grid := PushSensorGrid{}
 		grid.ClientID = clientID

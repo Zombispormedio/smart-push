@@ -3,8 +3,10 @@ package controllers
 import (
 	"os"
 	"reflect"
-	"time"
 	"strconv"
+	"strings"
+	"time"
+
 	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smartdb/lib/struts"
 )
@@ -27,7 +29,6 @@ func (sensorGridData *SensorGridData) FillByMap(Map map[string]interface{}, Lite
 }
 
 func ManageSensorData(sensorGridID string, data interface{}) error {
-	var Error error
 	grid := SensorGridData{}
 
 	grid.FillByMap(data.(map[string]interface{}), "json")
@@ -36,37 +37,62 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 
 	client := redis.Client()
 
-	gridKey := os.Getenv("GRID_KEY")+":" + sensorGridID
-	
-	DelError:=client.Del(gridKey)
-	
-	if DelError != nil{
-		return DelError
-	}
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+
+	nodeIDs := make([]string, numNodes)
 
 	for i := 0; i < numNodes; i++ {
 		sensor := grid.Data[i]
 
-		SADDError:=client.SAdd(gridKey, sensor.NodeID)
-		
-		if SADDError != nil{
-			return SADDError
-		}
-		
-		nodeKey:=os.Getenv("SENSOR_KEY")+":"+sensor.NodeID
-		
-		nodeMap:=map[string]string{
-			"value":sensor.Value,
-			"date":strconv.FormatInt(time.Now().Unix(), 10),
-		}
-		HMSetMapError:=client.HMSetMap(nodeKey, nodeMap)
-		
-		if HMSetMapError != nil{
-			return HMSetMapError
+		nodeIDs[i] = sensor.NodeID
+
+		nodeKey := os.Getenv("SENSOR_KEY") + ":" + sensor.NodeID + ":" + timestamp
+
+		SetError := client.SetWithExpiration(nodeKey, sensor.Value, time.Hour*4)
+
+		if SetError != nil {
+			return SetError
 		}
 	}
 
-	Error = client.Close()
+	gridGroup := os.Getenv("GRID_KEY") + ":" + sensorGridID
+	gridKey := gridGroup + ":" + timestamp
 
-	return Error
+	timestampKeys, KeyGroupError := client.KeysGroup(gridGroup)
+
+	if KeyGroupError != nil {
+		return KeyGroupError
+	}
+
+	var insert bool
+
+	if len(timestampKeys) > 0 {
+		oldGridKey := timestampKeys[0]
+		gridOldValue, GETError := client.Get(oldGridKey)
+
+		if GETError != nil {
+			return GETError
+		}
+
+		if len(strings.Split(gridOldValue, ",")) != len(nodeIDs) {
+			DelError := client.Del(oldGridKey)
+			if DelError != nil {
+				return DelError
+			}
+			insert = true
+
+		}
+
+	} else {
+		insert = true
+	}
+
+	if insert {
+		SetGridError := client.SetWithExpiration(gridKey, strings.Join(nodeIDs, ","), time.Hour*5)
+		if SetGridError != nil {
+			return SetGridError
+		}
+	}
+
+	return client.Close()
 }

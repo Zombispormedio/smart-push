@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"os"
-	"strconv"
+
 	"time"
 
 	"github.com/Zombispormedio/smart-push/lib/redis"
 	"github.com/Zombispormedio/smart-push/lib/response"
+	"github.com/Zombispormedio/smart-push/lib/utils"
 )
 
 func GetRealtimeData(sensor *response.RealTimeData) error {
@@ -16,19 +17,27 @@ func GetRealtimeData(sensor *response.RealTimeData) error {
 
 	defer client.Close()
 
-	sensorKey := os.Getenv("SENSOR_KEY") + ":" + sensor.ID
+	sensorKeyGroup := os.Getenv("SENSOR_KEY") + ":" + sensor.ID
 
-	dataMap, SensorDataError := client.HGetAllMap(sensorKey)
+	timestampKeys, SensorDataError := client.KeysGroup(sensorKeyGroup)
 
 	if SensorDataError != nil {
 		Error = SensorDataError
 
-	} else {
-		var date = dataMap["date"]
-		unixDate, _ := strconv.ParseInt(date, 10, 64)
-		sensor.Value = dataMap["value"]
-		sensor.TimeStamp = time.Unix(unixDate, 0).Format(time.RFC3339)
+	} 
+	
+	max:=utils.GetMaxTimestampKey(timestampKeys)
+	
+	nodeValue, GetError:= client.Get(max.Key)
+	if GetError != nil{
+		Error=GetError
+	}else{	
+	
+		sensor.Value = nodeValue
+		sensor.TimeStamp = time.Unix(max.Timestamp, 0).Format(time.RFC3339)
 	}
+	
+	
 
 	return Error
 }
