@@ -45,8 +45,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 	if ExpirationError!=nil{
 		return ExpirationError
 	}
-	
-	log.Info(expiration)
+	 log.Info(expiration)
 	
 
 	nodeIDs := make([]string, numNodes)
@@ -114,8 +113,6 @@ func GetExpiration(client *redis.RedisWrapper, now int64) (time.Duration, error)
 	pushTime,_:=strconv.Atoi(os.Getenv("PUSH_TIME"))
 	pushTime++
 	
-	
-
 	
 	pushGroup, GetError := client.KeysGroup( os.Getenv("TIME_KEY"));
 	

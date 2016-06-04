@@ -108,7 +108,6 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 		
 		if len(keys) > 1 {
 			
-			log.Info(min.Key)
 			Error = client.Expire(time.Second, min.Key)
 			
 			if Error != nil {
