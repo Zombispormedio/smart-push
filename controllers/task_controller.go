@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/rabbit"
@@ -78,8 +79,9 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 		}
 
 		max := utils.GetMaxTimestampKey(keys)
+		min := utils.GetMinTimestampKey(keys)
 
-		value, GetError := client.Get(max.Key)
+		value, GetError := client.Average(keys...)
 
 		if GetError != nil {
 			Error = GetError
@@ -90,16 +92,24 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 			break
 		}
 
-		sensorData.Value = value
+		sensorData.Value = strconv.FormatInt(value,10)
 		sensorData.Date = strconv.FormatInt(max.Timestamp, 10)
 
 		grid.Data = append(grid.Data, sensorData)
+		
+		SetExpirationError := client.Expire(time.Hour*4, max.Key)
+		
+		if SetExpirationError !=nil{
+			return SetExpirationError
+		}
+		
+		
+		
 		if len(keys) > 1 {
-			index := max.Index
-			KeysToRemove := append(keys[:index], keys[index+1:]...)
-			n:=time.Now()
-			Error = client.Expire(time.Second, KeysToRemove...)
-			log.Info(time.Since(n))
+			
+			log.Info(min.Key)
+			Error = client.Expire(time.Second, min.Key)
+			
 			if Error != nil {
 				log.WithFields(log.Fields{
 					"error": Error.Error(),
@@ -156,8 +166,8 @@ func PushOver() error {
 		if SensorKeysError != nil {
 			Error = SensorKeysError
 			log.WithFields(log.Fields{
-					"error": Error.Error(),
-				}).Error("SensorKeysError")
+				"error": Error.Error(),
+			}).Error("SensorKeysError")
 			break
 		}
 
@@ -182,6 +192,10 @@ func PushOver() error {
 	if Error == nil && len(grids) > 0 {
 		Error = Send(grids)
 	}
+	timeRegistryExpire, _ := strconv.Atoi(os.Getenv("PUSH_TIME"))
+	dateRegistryKey := os.Getenv("TIME_KEY") + ":" + strconv.FormatInt(time.Now().Unix(), 10)
+	log.Info(time.Minute*time.Duration(timeRegistryExpire));
+	client.SetWithExpiration(dateRegistryKey, "0", time.Minute*time.Duration(timeRegistryExpire))
 
 	return Error
 }
@@ -326,6 +340,13 @@ func PushRabbit() error {
 		if Error != nil {
 			break
 		}
+	}
+
+	if Error == nil {
+		timeRegistryExpire, _ := strconv.ParseInt(os.Getenv("PUSH_TIME"), 10, 64)
+		dateRegistryKey := os.Getenv("TIME_KEY") + ":" + strconv.FormatInt(time.Now().Unix(), 10)
+
+		client.SetWithExpiration(dateRegistryKey, "0", time.Minute*time.Duration(timeRegistryExpire))
 	}
 
 	return Error

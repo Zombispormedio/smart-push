@@ -3,7 +3,7 @@ package redis
 import (
 	"os"
 	"time"
-
+		"strconv"
 	"gopkg.in/redis.v3"
 )
 
@@ -94,4 +94,28 @@ func (r *RedisWrapper) Expire(exp time.Duration, keys ...string) error {
     
     
 	return Error
+}
+
+func (r *RedisWrapper)Average(keys ...string)(int64, error){
+	var acum int64
+	var result int64
+	var Error error
+    for _, k:=range keys{
+       
+	   str, GetError:= r.Get(k) 
+		value,_:=strconv.ParseInt(str, 10, 64)
+		acum+=value
+		
+        if GetError != nil{
+			Error=GetError
+            break
+        }
+    }
+	
+	if Error!=nil{
+		result=acum/int64(len(keys))
+	}
+    
+    
+	return result, Error
 }
