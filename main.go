@@ -18,18 +18,23 @@ func main() {
 
 	router.Use(server)
 
-	subscriber := mosquito.New(router.Mosquito)
+	if os.Getenv("IS_MQTT") == "" {
+		subscriber := mosquito.New(router.Mosquito)
 
-	sigc := make(chan os.Signal, 1)
+		sigc := make(chan os.Signal, 1)
 
-	signal.Notify(sigc, os.Interrupt, os.Kill)
+		signal.Notify(sigc, os.Interrupt, os.Kill)
 
-	go config.Listen(server)
+		go config.Listen(server)
 
-	go subscriber.Run()
+		go subscriber.Run()
 
-	<-sigc
-	if err := subscriber.Client.Disconnect(); err != nil {
-		panic(err)
+		<-sigc
+		if err := subscriber.Client.Disconnect(); err != nil {
+			panic(err)
+		}
+	}else{
+		config.Listen(server)
 	}
+
 }
