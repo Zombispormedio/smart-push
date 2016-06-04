@@ -122,11 +122,13 @@ func GetExpiration(client *redis.RedisWrapper, now int64) (time.Duration, error)
 	pushDuration=time.Minute*time.Duration(pushTime)
 	
 	if len(pushGroup) >0{
-		elem,_:=strconv.ParseInt(strings.Split(pushGroup[0], ":")[0], 10, 64)
+		elem,_:=strconv.ParseInt(strings.Split(pushGroup[0], ":")[1], 10, 64)
 	
 		lastPush:=time.Unix(elem, 0)
 		duration := time.Since(lastPush)
-		pushDuration-=time.Duration(duration.Minutes())
+	
+		pushDuration=pushDuration-duration
+		
 	}
 	
 		
