@@ -24,20 +24,24 @@ func GetRealtimeData(sensor *response.RealTimeData) error {
 	if SensorDataError != nil {
 		Error = SensorDataError
 
-	} 
-	
-	max:=utils.GetMaxTimestampKey(timestampKeys)
-	
-	nodeValue, GetError:= client.Get(max.Key)
-	if GetError != nil{
-		Error=GetError
-	}else{	
-	
-		sensor.Value = nodeValue
-		sensor.TimeStamp = time.Unix(max.Timestamp, 0).Format(time.RFC3339)
 	}
-	
-	
+
+	if len(timestampKeys) > 0 {
+
+		max := utils.GetMaxTimestampKey(timestampKeys)
+
+		nodeValue, GetError := client.Get(max.Key)
+		if GetError != nil {
+			Error = GetError
+		} else {
+
+			sensor.Value = nodeValue
+			sensor.TimeStamp = time.Unix(max.Timestamp, 0).Format(time.RFC3339)
+		}
+	} else {
+		sensor.Value = "0"
+		sensor.TimeStamp = "No sync"
+	}
 
 	return Error
 }
