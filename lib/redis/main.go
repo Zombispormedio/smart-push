@@ -2,8 +2,9 @@ package redis
 
 import (
 	"os"
+	"strconv"
 	"time"
-		"strconv"
+
 	"gopkg.in/redis.v3"
 )
 
@@ -84,38 +85,38 @@ func (r *RedisWrapper) Close() error {
 }
 
 func (r *RedisWrapper) Expire(exp time.Duration, keys ...string) error {
-    var Error error
-    for _, k:=range keys{
-        Error=r.Client.Expire(k, exp).Err()
-        if Error != nil{
-            break
-        }
-    }
-    
-    
+	var Error error
+	for _, k := range keys {
+		Error = r.Client.Expire(k, exp).Err()
+		if Error != nil {
+			break
+		}
+	}
+
 	return Error
 }
 
-func (r *RedisWrapper)Average(keys ...string)(int64, error){
-	var acum int64
-	var result int64
+func (r *RedisWrapper) Average(keys ...string) (float64, error) {
+	var acum float64
+	var result float64
 	var Error error
-    for _, k:=range keys{
-       
-	   str, GetError:= r.Get(k) 
-		value,_:=strconv.ParseInt(str, 10, 64)
-		acum+=value
-		
-        if GetError != nil{
-			Error=GetError
-            break
-        }
-    }
-	
-	if Error!=nil{
-		result=acum/int64(len(keys))
+	for _, k := range keys {
+
+		str, GetError := r.Get(k)
+
+		value, _ := strconv.ParseFloat(str, 64)
+
+		acum = acum + value
+
+		if GetError != nil {
+			Error = GetError
+			break
+		}
 	}
-    
-    
+
+	if Error == nil {
+		result = acum / float64(len(keys))
+	}
+
 	return result, Error
 }

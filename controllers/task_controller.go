@@ -91,8 +91,9 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 			}).Error("SensorGetError")
 			break
 		}
+		
 
-		sensorData.Value = strconv.FormatInt(value,10)
+		sensorData.Value = strconv.FormatFloat(value,'f', 6,64)
 		sensorData.Date = strconv.FormatInt(max.Timestamp, 10)
 
 		grid.Data = append(grid.Data, sensorData)
