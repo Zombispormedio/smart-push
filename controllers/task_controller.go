@@ -98,7 +98,7 @@ func GetSensorData(client *redis.RedisWrapper, sensorKeys []string, grid *PushSe
 
 		grid.Data = append(grid.Data, sensorData)
 		
-		SetExpirationError := client.Expire(time.Hour*4, max.Key)
+		SetExpirationError := client.Expire(time.Hour*5, max.Key)
 		
 		if SetExpirationError !=nil{
 			return SetExpirationError

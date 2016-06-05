@@ -97,7 +97,7 @@ func ManageSensorData(sensorGridID string, data interface{}) error {
 	}
 
 	if insert {
-		SetGridError := client.SetWithExpiration(gridKey, strings.Join(nodeIDs, ","), time.Hour*4)
+		SetGridError := client.SetWithExpiration(gridKey, strings.Join(nodeIDs, ","), time.Hour*24)
 		if SetGridError != nil {
 			return SetGridError
 		}
