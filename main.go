@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/Zombispormedio/smart-push/config"
 	"github.com/Zombispormedio/smart-push/lib/mosquito"
 	"github.com/Zombispormedio/smart-push/router"
@@ -19,6 +20,7 @@ func main() {
 	router.Use(server)
 
 	if os.Getenv("IS_MQTT") == "" {
+		log.Info("MQTT enabled")
 		subscriber := mosquito.New(router.Mosquito)
 
 		sigc := make(chan os.Signal, 1)
@@ -33,7 +35,7 @@ func main() {
 		if err := subscriber.Client.Disconnect(); err != nil {
 			panic(err)
 		}
-	}else{
+	} else {
 		config.Listen(server)
 	}
 
