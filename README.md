@@ -1,5 +1,5 @@
 
-# smart-push
+# IoT Layer for Smart Town Project
 
 
 
